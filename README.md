@@ -1,3 +1,4 @@
+  *Istanbul technical university GEM425E finite element analysis of marine structures final project / Eren Keskintaş
   *Parametric Ship Midship Section FEM Model (ANSYS APDL)
 This repository contains a fully parametric finite element model of a ship midship cross-section, developed using ANSYS APDL. The script automatically generates the structural geometry, assigns sections and materials, and creates the mesh, enabling fast structural modeling and analysis workflows.
   *Project Overview
