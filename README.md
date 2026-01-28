@@ -40,3 +40,4 @@ the script generates an entire family of structures by simply modifying paramete
 This project is part of an ongoing learning and development process in ship structural modeling and parametric FEM design.
 Suggestions for improvement, optimization ideas, or structural modeling feedback are highly appreciated. If you have recommendations regarding:
 feel free to open an issue or share your thoughts.
+<img width="928" height="707" alt="image" src="https://github.com/user-attachments/assets/9658f669-e1a0-48fc-9afe-5ca53e389e8c" />
