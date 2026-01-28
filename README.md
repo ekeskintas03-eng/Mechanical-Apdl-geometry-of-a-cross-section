@@ -1,248 +1,40 @@
-! Mechanical-Apdl-geometry-of-a-cross-section
-! you can change the parameters like number of stiffeners on bottom or deck and it creates a new geometry
-! useful for parametric design, and export the cdb to workbench and solve 
-/PREP7
-!===========================================================
-! Eren Keskintas - FEM Geometry of a ship's cross section, double hull, double bottom
-!===========================================================
+  *Parametric Ship Midship Section FEM Model (ANSYS APDL)
+This repository contains a fully parametric finite element model of a ship midship cross-section, developed using ANSYS APDL. The script automatically generates the structural geometry, assigns sections and materials, and creates the mesh, enabling fast structural modeling and analysis workflows.
+  *Project Overview
+The model represents the midship section of a ship hull — one of the most structurally critical regions of a vessel. It includes:
+Bottom plating
+Inner bottom structure
+Side shell regions
+Deck plating
+Transverse bulkheads
+Longitudinal flat bar stiffeners
+All structural components are modeled using SHELL181 elements, making the model suitable for global structural analysis, stiffness studies, and FEM-based design investigations.
+  *Fully Parametric Geometry
+The geometry is controlled entirely by parameters at the beginning of the APDL script. Changing a few values automatically generates a new structural configuration.
+  *Adjustable Parameters
+Parameter	Description
+B	Ship breadth
+H	Ship depth
+Los	Section length
+TP	Plate thickness
+TW	Stiffener thickness
+Nsb	Number of bottom stiffeners (per side)
+Nsd	Number of deck stiffeners (per side)
+Spacing values	Automatically computed
+This allows rapid creation of alternative structural layouts without redrawing geometry.
+  *Stiffener Modeling
+All longitudinal stiffeners are modeled as flat bar stiffeners (web-only shell elements). This provides:
+Reduced modeling complexity
+Efficient meshing
+Faster solver performance
+The approach is well suited for parametric studies and preliminary ship structural design.
+  *Workbench Integration
+The APDL model can be exported as a .cdb file and imported into ANSYS Workbench using the External Model workflow. This enables:
+Load and boundary condition definition in Mechanical
+Post-processing with Workbench tools
+Hybrid APDL–Workbench analysis setups
+the script generates an entire family of structures by simply modifying parameters.
 
-!--------------------------
-! 1. PARAMETERS
-!--------------------------
-B    = 15          ! Breadth (m)
-Los  = 20          ! Section length in Z (m)
-H    = 12          ! Depth (m)
-Bwt  = B/10        ! Wing tank width (m)
-
-! NUMBER OF STIFFENERS (ONE SIDE ONLY)
-! Nsb: bottom stiffeners count on one side (port or starboard)
-! Nsd: deck stiffeners count on one side (excluding the centerline one)
-Nsb  = 2
-Nsd  = 2
-
-! SPACING (half-breadth minus wing tank) divided by (N + 1)
-Bstfb = (B/2 - Bwt)/(Nsb+1)   ! Bottom stiffener spacing
-Bstfd = (B/2 - Bwt)/(Nsd+1)   ! Deck stiffener spacing
-
-! Flat bar heights (web heights) (m)
-h_bot  = 0.15                 ! Bottom / inner bottom stiffener height
-h_deck = 0.20                 ! Deck stiffener height
-
-! Plate & stiffener thickness (m)
-TP = 0.012                    ! Plate thickness
-TW = 0.010                    ! Flat bar thickness
-
-! Selection tolerance
-eps = 1e-4
-
-!--------------------------
-! 2. MATERIAL & ELEMENT TYPE
-!--------------------------
-ET,1,SHELL181
-MP,EX,1,210E9
-MP,PRXY,1,0.3
-
-!--------------------------
-! 3. SECTIONS
-!--------------------------
-! Section 1: Hull plates
-SECT,1,SHELL
-SECDATA,TP
-SECOFFSET,MID
-
-! Section 2: Flat bar stiffeners
-SECT,2,SHELL
-SECDATA,TW
-SECOFFSET,MID
-
-!===========================================================
-! 4. HULL GEOMETRY
-!===========================================================
-! Keypoints at Z = 0
-
-! Bottom line (y=0)
-K,1,0,0,0
-K,2,B/10,0,0
-K,3,B/2,0,0
-K,4,9*B/10,0,0
-K,5,B,0,0
-
-! Inner bottom line (y=H/6)
-K,6,0,H/6,0
-K,7,B/10,H/6,0
-K,8,B/2,H/6,0
-K,9,9*B/10,H/6,0
-K,10,B,H/6,0
-
-! Deck line (y=H)
-K,11,0,H,0
-K,12,B/10,H,0
-K,13,9*B/10,H,0
-K,14,B,H,0
-
-! Copy keypoints to Z=Los (creates 101..114)
-KGEN,2,1,14,1,0,0,Los,100
-
-! Areas: bottom plates
-A,1,2,102,101
-A,2,3,103,102
-A,3,4,104,103
-A,4,5,105,104
-
-! Inner bottom plates
-A,6,7,107,106
-A,7,8,108,107
-A,8,9,109,108
-A,9,10,110,109
-
-! Deck plates
-A,11,12,112,111
-A,12,13,113,112
-A,13,14,114,113
-
-! Vertical plates (side walls and middle region)
-A,1,11,111,101
-A,2,12,112,102
-A,3,8,108,103
-A,4,13,113,104
-A,5,14,114,105
-
-! Assign hull plate attributes: MAT=1, TYPE=1, SEC=1
-ASEL,ALL
-AATT,1,,1,0,1
-
-! Store hull areas as a component (to exclude during copying)
-CM,HULL_PLATES,AREA
-
-!===========================================================
-! 5. FLAT BAR STIFFENERS (ONE EACH: PORT & STBD)
-!===========================================================
-! Coordinate helpers
-XBP = B/2 - Bstfb
-XBS = B/2 + Bstfb
-YIB = H/6
-XCL = B/2
-YDK = H
-
-! --- BOTTOM STIFFENERS (flat bar surfaces) ---
-! Port bottom stiffener
-K,200,XBP,0,0
-K,201,XBP,h_bot,0
-K,202,XBP,h_bot,Los
-K,203,XBP,0,Los
-A,200,201,202,203
-AATT,1,,1,0,2     ! MAT=1, TYPE=1, SEC=2
-
-! Starboard bottom stiffener
-K,210,XBS,0,0
-K,211,XBS,h_bot,0
-K,212,XBS,h_bot,Los
-K,213,XBS,0,Los
-A,210,211,212,213
-AATT,1,,1,0,2
-
-! --- INNER BOTTOM STIFFENERS (downward) ---
-! Port inner bottom stiffener
-K,300,XBP,YIB,0
-K,301,XBP,YIB-h_bot,0
-K,302,XBP,YIB-h_bot,Los
-K,303,XBP,YIB,Los
-A,300,301,302,303
-AATT,1,,1,0,2
-
-! Starboard inner bottom stiffener
-K,310,XBS,YIB,0
-K,311,XBS,YIB-h_bot,0
-K,312,XBS,YIB-h_bot,Los
-K,313,XBS,YIB,Los
-A,310,311,312,313
-AATT,1,,1,0,2
-
-! --- DECK CENTERLINE STIFFENER (downward) ---
-K,400,XCL,YDK,0
-K,401,XCL,YDK-h_deck,0
-K,402,XCL,YDK-h_deck,Los
-K,403,XCL,YDK,Los
-A,400,401,402,403
-AATT,1,,1,0,2
-
-!===========================================================
-! 6. COPY STIFFENERS (SAFE WORKFLOW)
-!===========================================================
-! Logic:
-! 1) Select stiffener region by location
-! 2) Exclude hull plates (component)
-! 3) Copy selected stiffener areas with AGEN
-
-! 1) BOTTOM STBD (+X)
-ASEL,S,LOC,Y,-eps,h_bot+eps
-ASEL,R,LOC,X,XBS-eps,XBS+eps
-CMSEL,U,HULL_PLATES
-AGEN,Nsb,ALL,,,Bstfb,0,0
-ALLSEL,ALL
-
-! 2) BOTTOM PORT (-X)
-ASEL,S,LOC,Y,-eps,h_bot+eps
-ASEL,R,LOC,X,XBP-eps,XBP+eps
-CMSEL,U,HULL_PLATES
-AGEN,Nsb,ALL,,,-Bstfb,0,0
-ALLSEL,ALL
-
-! 3) INNER BOTTOM STBD (+X)
-ASEL,S,LOC,Y,YIB-h_bot-eps,YIB+eps
-ASEL,R,LOC,X,XBS-eps,XBS+eps
-CMSEL,U,HULL_PLATES
-AGEN,Nsb,ALL,,,Bstfb,0,0
-ALLSEL,ALL
-
-! 4) INNER BOTTOM PORT (-X)
-ASEL,S,LOC,Y,YIB-h_bot-eps,YIB+eps
-ASEL,R,LOC,X,XBP-eps,XBP+eps
-CMSEL,U,HULL_PLATES
-AGEN,Nsb,ALL,,,-Bstfb,0,0
-ALLSEL,ALL
-
-! 5) DECK (copy from centerline to STBD +X)
-ASEL,S,LOC,Y,YDK-h_deck-eps,YDK+eps
-ASEL,R,LOC,X,XCL-eps,XCL+eps
-CMSEL,U,HULL_PLATES
-AGEN,Nsd+1,ALL,,,Bstfd,0,0
-ALLSEL,ALL
-
-! 6) DECK (copy from centerline to PORT -X)
-ASEL,S,LOC,Y,YDK-h_deck-eps,YDK+eps
-ASEL,R,LOC,X,XCL-eps,XCL+eps
-CMSEL,U,HULL_PLATES
-AGEN,Nsd+1,ALL,,,-Bstfd,0,0
-ALLSEL,ALL
-
-! Merge coincident entities (recommended for clean connectivity)
-NUMMRG,ALL
-
-!===========================================================
-! 7. TRANSVERSE BULKHEADS
-!===========================================================
-! Bulkhead at Z = 5 m
-K,1500,0,0,5
-K,1501,B,0,5
-K,1502,0,H,5
-K,1503,B,H,5
-A,1500,1501,1503,1502
-
-! Bulkhead at Z = 15 m
-K,1504,0,0,15
-K,1505,B,0,15
-K,1506,0,H,15
-K,1507,B,H,15
-A,1504,1505,1507,1506
-
-ALLSEL,ALL
-
-!------------------------
-! 8. MESH
-!------------------------
-AESIZE,ALL,0.5
-AMESH,ALL
-
-FINISH
-
+This project is part of an ongoing learning and development process in ship structural modeling and parametric FEM design.
+Suggestions for improvement, optimization ideas, or structural modeling feedback are highly appreciated. If you have recommendations regarding:
+feel free to open an issue or share your thoughts.
