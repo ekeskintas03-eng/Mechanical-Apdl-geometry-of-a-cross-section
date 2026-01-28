@@ -29,7 +29,7 @@ Reduced modeling complexity
 Efficient meshing
 Faster solver performance
 The approach is well suited for parametric studies and preliminary ship structural design.
-   ##Workbench Integration
+   ## Workbench Integration
 The APDL model can be exported as a .cdb file and imported into ANSYS Workbench using the External Model workflow. This enables:
 Load and boundary condition definition in Mechanical
 Post-processing with Workbench tools
